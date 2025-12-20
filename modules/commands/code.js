@@ -12,12 +12,12 @@ module.exports = {
     hasPrefix: true,
     permission: "ADMIN",
     cooldown: 3,
-    category: "SYSTEM",
+    category: "UTILITY",
   },
 
   run: async function ({ api, message, args, event }) {
     const { threadID, messageID, senderID, messageReply } = message;
-    
+
     // If messageReply exists in message, use it; otherwise use event.messageReply if available
     const replyMessage = messageReply || (event && event.messageReply);
 
@@ -38,12 +38,12 @@ module.exports = {
       if (args.length < 2) {
         return api.sendMessage(
           "❌ Not enough arguments provided.\n" +
-            `Usage:\n` +
-            `• ${global.config.prefix}code view [file_path] - View a file's content\n` +
-            `• ${global.config.prefix}code edit [file_path] [new_code] - Edit a file\n` +
-            `• ${global.config.prefix}code create [file_path] [code] - Create a new file\n` +
-            `• ${global.config.prefix}code delete [file_path] - Delete a file\n` +
-            `• ${global.config.prefix}code rename [old_path] [new_path] - Rename a file`,
+          `Usage:\n` +
+          `• ${global.config.prefix}code view [file_path] - View a file's content\n` +
+          `• ${global.config.prefix}code edit [file_path] [new_code] - Edit a file\n` +
+          `• ${global.config.prefix}code create [file_path] [code] - Create a new file\n` +
+          `• ${global.config.prefix}code delete [file_path] - Delete a file\n` +
+          `• ${global.config.prefix}code rename [old_path] [new_path] - Rename a file`,
           threadID,
           messageID,
         );
@@ -158,28 +158,56 @@ module.exports = {
           try {
             const commandName = path.basename(filePath, ".js");
 
-            // If it's a command file, test reload before saving
+            // If it's a command file, validate before saving
             if (
               filePath.includes("modules/commands") ||
               filePath.includes("modules\\commands")
             ) {
               try {
-                // Write to a temp file to test reload
+                // Get the OLD file's actual config.name for exclusion
+                let excludeConfigName = null;
+                try {
+                  delete require.cache[require.resolve(filePath)];
+                  const oldCommand = require(filePath);
+                  excludeConfigName = oldCommand.config?.name || null;
+                  delete require.cache[require.resolve(filePath)];
+                } catch (e) {
+                  // If old file doesn't exist or can't be loaded, no exclusion needed
+                }
+
+                // Write to a temp file to validate
                 const tempPath = filePath + ".temp";
                 fs.writeFileSync(tempPath, newCode, "utf8");
 
-                // Attempt to reload from temp
-                delete require.cache[require.resolve(tempPath)];
-                require(tempPath); // if there's syntax error, it will throw
+                // Validate the temp file (checks syntax + duplicates)
+                // Pass the OLD config.name to exclude from duplicate check
+                const validation = global.loader.validateCommand(tempPath, excludeConfigName);
 
-                // Passed, now write permanently
-                fs.writeFileSync(filePath, newCode, "utf8");
+                // Clear temp from cache
+                try {
+                  delete require.cache[require.resolve(tempPath)];
+                } catch (e) { }
+
+                // Delete temp file
                 fs.unlinkSync(tempPath);
+
+                // If validation failed, return error
+                if (!validation.success) {
+                  return api.sendMessage(
+                    `❌ Validation failed: ${validation.error}\n` +
+                    `⚠️ File was not modified.`,
+                    threadID,
+                    messageID,
+                  );
+                }
+
+                // Validation passed, now write permanently
+                fs.writeFileSync(filePath, newCode, "utf8");
 
                 const reloadSuccess = global.loader.reloadCommand(commandName);
                 return api.sendMessage(
                   `✅ Successfully edited file: ${path.basename(filePath)}\n` +
-                    (reloadSuccess ? "✅ Command reloaded successfully!" : ""),
+                  (reloadSuccess ? `✅ Command "${validation.commandName}" reloaded successfully!` : "⚠️ File saved but reload had issues."),
                   threadID,
                   messageID,
                 );
@@ -188,8 +216,8 @@ module.exports = {
                 if (fs.existsSync(filePath + ".temp"))
                   fs.unlinkSync(filePath + ".temp");
                 return api.sendMessage(
-                  `❌ Reload failed: ${error.message}\n` +
-                    `⚠️ File was not modified.`,
+                  `❌ Error: ${error.message}\n` +
+                  `⚠️ File was not modified.`,
                   threadID,
                   messageID,
                 );
@@ -212,7 +240,7 @@ module.exports = {
               // If restore fails, inform the user
               return api.sendMessage(
                 `❌ Error editing file: ${error.message}\n` +
-                  `❌ Failed to restore original content: ${restoreError.message}`,
+                `❌ Failed to restore original content: ${restoreError.message}`,
                 threadID,
                 messageID,
               );
@@ -220,7 +248,7 @@ module.exports = {
 
             return api.sendMessage(
               `❌ Error editing file: ${error.message}\n` +
-                `File has been restored to its original state.`,
+              `File has been restored to its original state.`,
               threadID,
               messageID,
             );
@@ -232,7 +260,7 @@ module.exports = {
           if (fs.existsSync(filePath)) {
             return api.sendMessage(
               `❌ File already exists: ${filePath}\n` +
-                `Use 'edit' action to modify existing files.`,
+              `Use 'edit' action to modify existing files.`,
               threadID,
               messageID,
             );
@@ -247,7 +275,7 @@ module.exports = {
           const fileName = path.basename(filePath);
           const commandName = path.basename(filePath, ".js");
 
-          // If it's a command file, test before saving
+          // If it's a command file, validate before saving
           if (
             filePath.includes("modules/commands") ||
             filePath.includes("modules\\commands")
@@ -257,19 +285,38 @@ module.exports = {
               const tempPath = filePath + ".temp";
               fs.writeFileSync(tempPath, newCode, "utf8");
 
-              // Attempt to require the temp file to check for syntax errors
-              delete require.cache[require.resolve(tempPath)];
-              require(tempPath); // will throw if syntax is invalid
+              // Validate the temp file (checks syntax + duplicates)
+              const validation = global.loader.validateCommand(tempPath, null);
 
-              // Passed validation, now write permanently and delete temp
-              fs.writeFileSync(filePath, newCode, "utf8");
+              // Clear temp from cache
+              try {
+                delete require.cache[require.resolve(tempPath)];
+              } catch (e) { }
+
+              // Delete temp file
               fs.unlinkSync(tempPath);
 
-              // Attempt to load command
+              // If validation failed, return error
+              if (!validation.success) {
+                return api.sendMessage(
+                  `❌ Validation failed: ${validation.error}\n` +
+                  `⚠️ File was not created.`,
+                  threadID,
+                  messageID,
+                );
+              }
+
+              // Validation passed, now write the actual file
+              fs.writeFileSync(filePath, newCode, "utf8");
+
+              // Wait a bit to ensure file is written
+              await new Promise(r => setTimeout(r, 100));
+
+              // Now load the command
               const loadSuccess = global.loader.reloadCommand(commandName);
               return api.sendMessage(
                 `✅ Successfully created file: ${fileName}\n` +
-                  (loadSuccess ? "✅ Command loaded successfully!" : ""),
+                (loadSuccess ? `✅ Command "${validation.commandName}" loaded successfully!` : "⚠️ Command created but reload had issues."),
                 threadID,
                 messageID,
               );
@@ -278,7 +325,7 @@ module.exports = {
                 fs.unlinkSync(filePath + ".temp");
               return api.sendMessage(
                 `❌ Error creating command file: ${error.message}\n` +
-                  `⚠️ File was not created.`,
+                `⚠️ File was not created.`,
                 threadID,
                 messageID,
               );
@@ -361,7 +408,7 @@ module.exports = {
           if (args.length < 3) {
             return api.sendMessage(
               "❌ Not enough arguments for rename action.\n" +
-                `Usage: ${global.config.prefix}code rename [old_path] [new_path]`,
+              `Usage: ${global.config.prefix}code rename [old_path] [new_path]`,
               threadID,
               messageID,
             );
@@ -393,22 +440,35 @@ module.exports = {
           try {
             const oldFileName = path.basename(filePath);
             const newFileName = path.basename(newFilePath);
+            let actualConfigName = null;
 
             // If it's a command file, remove it from the commands list first
             if (
               filePath.includes("modules/commands") ||
               filePath.includes("modules\\commands")
             ) {
-              const commandName = path.basename(filePath, ".js");
-              // Remove command from cache and client
-              delete require.cache[require.resolve(filePath)];
-              global.client.commands.delete(commandName);
+              // First, require the old file to get its actual config.name
+              try {
+                delete require.cache[require.resolve(filePath)];
+                const oldCommand = require(filePath);
+                if (oldCommand.config && oldCommand.config.name) {
+                  actualConfigName = oldCommand.config.name;
 
-              // Also remove any aliases
-              for (const [key, cmd] of global.client.commands.entries()) {
-                if (cmd.config && cmd.config.name === commandName) {
-                  global.client.commands.delete(key);
+                  // Remove by actual config.name
+                  global.client.commands.delete(actualConfigName);
+
+                  // Also remove any aliases
+                  if (oldCommand.config.aliases && Array.isArray(oldCommand.config.aliases)) {
+                    oldCommand.config.aliases.forEach(alias => {
+                      global.client.commands.delete(alias);
+                    });
+                  }
                 }
+                delete require.cache[require.resolve(filePath)];
+              } catch (e) {
+                // If we can't load the file, try deleting by filename
+                const commandName = path.basename(filePath, ".js");
+                global.client.commands.delete(commandName);
               }
             }
 
@@ -421,8 +481,9 @@ module.exports = {
             // Rename the file
             fs.renameSync(filePath, newFilePath);
 
-            // If it's a command file, try to reload it with the new name
+            // If it's a command file, try to reload it with the new file name
             let reloadSuccess = false;
+            let loadedCommandName = null;
             if (
               newFilePath.includes("modules/commands") ||
               newFilePath.includes("modules\\commands")
@@ -430,11 +491,19 @@ module.exports = {
               const newCommandName = path.basename(newFilePath, ".js");
               try {
                 reloadSuccess = global.loader.reloadCommand(newCommandName);
+                // Get the loaded command's actual name
+                if (reloadSuccess) {
+                  try {
+                    delete require.cache[require.resolve(newFilePath)];
+                    const newCmd = require(newFilePath);
+                    loadedCommandName = newCmd.config?.name;
+                  } catch (e) { }
+                }
               } catch (reloadError) {
                 // If reload fails, inform the user but don't revert the rename
                 return api.sendMessage(
                   `✅ File renamed from ${oldFileName} to ${newFileName}\n` +
-                    `⚠️ Warning: Error loading renamed command: ${reloadError.message}`,
+                  `⚠️ Warning: Error loading renamed command: ${reloadError.message}`,
                   threadID,
                   messageID,
                 );
@@ -443,7 +512,7 @@ module.exports = {
 
             return api.sendMessage(
               `✅ Successfully renamed file from ${oldFileName} to ${newFileName}\n` +
-                (reloadSuccess ? "✅ Command reloaded successfully!" : ""),
+              (reloadSuccess ? `✅ Command "${loadedCommandName || 'unknown'}" reloaded successfully!` : ""),
               threadID,
               messageID,
             );
@@ -459,7 +528,7 @@ module.exports = {
         default:
           return api.sendMessage(
             `❌ Unknown action: ${action}\n` +
-              `Valid actions are: view, edit, create, delete, rename`,
+            `Valid actions are: view, edit, create, delete, rename`,
             threadID,
             messageID,
           );

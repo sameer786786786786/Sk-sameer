@@ -15,7 +15,7 @@ module.exports = {
     cooldown: 5,
     category: 'ADMIN'
   },
-  
+
   /**
    * Command execution
    * @param {Object} options - Options object
@@ -23,9 +23,9 @@ module.exports = {
    * @param {Object} options.message - Message object
    * @param {Array<string>} options.args - Command arguments
    */
-  run: async function({ api, message, args }) {
+  run: async function ({ api, message, args }) {
     const { threadID, messageID, senderID } = message;
-    
+
     // Check if no arguments provided
     if (args.length === 0) {
       return global.api.sendMessage(
@@ -52,15 +52,15 @@ module.exports = {
         messageID
       );
     }
-    
+
     const action = args[0].toLowerCase();
-    
+
     // Handle ban action
     if (action === 'ban') {
       const targetType = args[1]?.toLowerCase();
       const targetID = args[2];
       const reason = args.slice(3).join(' ') || 'No reason provided';
-      
+
       if (!targetType || !targetID) {
         return global.api.sendMessage(
           '❌ Missing target type (user/thread) or ID',
@@ -68,13 +68,13 @@ module.exports = {
           messageID
         );
       }
-      
+
       if (targetType === 'user') {
         // Ban user
         try {
           // Check if user exists
           let user = await global.User.findOne({ userID: targetID });
-          
+
           if (!user) {
             // Get user info from Facebook
             try {
@@ -84,7 +84,7 @@ module.exports = {
                   resolve(info[targetID]);
                 });
               });
-              
+
               // Create user in database
               user = await global.User.create({
                 userID: targetID,
@@ -98,7 +98,7 @@ module.exports = {
               );
             }
           }
-          
+
           // Check if user is already banned
           if (user.isBanned) {
             return global.api.sendMessage(
@@ -107,7 +107,7 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Check if trying to ban owner or admin
           if (targetID === global.config.ownerID) {
             return global.api.sendMessage(
@@ -116,7 +116,7 @@ module.exports = {
               messageID
             );
           }
-          
+
           if (global.config.adminIDs.includes(targetID) && senderID !== global.config.ownerID) {
             return global.api.sendMessage(
               '❌ Only the owner can ban an admin',
@@ -124,20 +124,20 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Ban user
           user.isBanned = true;
           user.banReason = reason;
           await user.save();
-          
+
           global.logger.system(`User ${targetID} (${user.name}) was banned by ${senderID}. Reason: ${reason}`);
-          
+
           return global.api.sendMessage(
             `✅ Banned user ${user.name} (${targetID})\nReason: ${reason}`,
             threadID,
             messageID
           );
-          
+
         } catch (error) {
           global.logger.error('Error in admin ban user command:', error.message);
           return global.api.sendMessage(
@@ -151,7 +151,7 @@ module.exports = {
         try {
           // Check if thread exists
           let thread = await global.Thread.findOne({ threadID: targetID });
-          
+
           if (!thread) {
             // Get thread info from Facebook
             try {
@@ -161,7 +161,7 @@ module.exports = {
                   resolve(info);
                 });
               });
-              
+
               // Create thread in database
               thread = await global.Thread.create({
                 threadID: targetID,
@@ -175,7 +175,7 @@ module.exports = {
               );
             }
           }
-          
+
           // Check if thread is already banned
           if (thread.isBanned) {
             return global.api.sendMessage(
@@ -184,26 +184,26 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Ban thread
           thread.isBanned = true;
           thread.banReason = reason;
           await thread.save();
-          
+
           global.logger.system(`Thread ${targetID} (${thread.threadName}) was banned by ${senderID}. Reason: ${reason}`);
-          
+
           // Notify the banned thread
           await global.api.sendMessage(
             `⚠️ This group has been banned from using the bot\nReason: ${reason}\n\nContact the bot owner for more information.`,
             targetID
           );
-          
+
           return global.api.sendMessage(
             `✅ Banned thread ${thread.threadName} (${targetID})\nReason: ${reason}`,
             threadID,
             messageID
           );
-          
+
         } catch (error) {
           global.logger.error('Error in admin ban thread command:', error.message);
           return global.api.sendMessage(
@@ -220,12 +220,12 @@ module.exports = {
         );
       }
     }
-    
+
     // Handle unban action
     else if (action === 'unban') {
       const targetType = args[1]?.toLowerCase();
       const targetID = args[2];
-      
+
       if (!targetType || !targetID) {
         return global.api.sendMessage(
           '❌ Missing target type (user/thread) or ID',
@@ -233,13 +233,13 @@ module.exports = {
           messageID
         );
       }
-      
+
       if (targetType === 'user') {
         // Unban user
         try {
           // Check if user exists
           const user = await global.User.findOne({ userID: targetID });
-          
+
           if (!user) {
             return global.api.sendMessage(
               `❌ User with ID ${targetID} not found`,
@@ -247,7 +247,7 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Check if user is not banned
           if (!user.isBanned) {
             return global.api.sendMessage(
@@ -256,20 +256,20 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Unban user
           user.isBanned = false;
           user.banReason = null;
           await user.save();
-          
+
           global.logger.system(`User ${targetID} (${user.name}) was unbanned by ${senderID}`);
-          
+
           return global.api.sendMessage(
             `✅ Unbanned user ${user.name} (${targetID})`,
             threadID,
             messageID
           );
-          
+
         } catch (error) {
           global.logger.error('Error in admin unban user command:', error.message);
           return global.api.sendMessage(
@@ -283,7 +283,7 @@ module.exports = {
         try {
           // Check if thread exists
           const thread = await global.Thread.findOne({ threadID: targetID });
-          
+
           if (!thread) {
             return global.api.sendMessage(
               `❌ Thread with ID ${targetID} not found`,
@@ -291,7 +291,7 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Check if thread is not banned
           if (!thread.isBanned) {
             return global.api.sendMessage(
@@ -300,26 +300,26 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Unban thread
           thread.isBanned = false;
           thread.banReason = null;
           await thread.save();
-          
+
           global.logger.system(`Thread ${targetID} (${thread.threadName}) was unbanned by ${senderID}`);
-          
+
           // Notify the unbanned thread
           await global.api.sendMessage(
             `✅ This group has been unbanned and can now use the bot again.`,
             targetID
           );
-          
+
           return global.api.sendMessage(
             `✅ Unbanned thread ${thread.threadName} (${targetID})`,
             threadID,
             messageID
           );
-          
+
         } catch (error) {
           global.logger.error('Error in admin unban thread command:', error.message);
           return global.api.sendMessage(
@@ -336,12 +336,12 @@ module.exports = {
         );
       }
     }
-    
+
     // Handle info action
     else if (action === 'info') {
       const targetType = args[1]?.toLowerCase();
       const targetID = args[2] || threadID; // Default to current thread if not specified
-      
+
       if (!targetType) {
         return global.api.sendMessage(
           '❌ Missing target type (user/thread)',
@@ -349,16 +349,16 @@ module.exports = {
           messageID
         );
       }
-      
+
       if (targetType === 'user') {
         // Get user info
         try {
           const userID = targetID || senderID; // Default to sender if not specified
-          
+
           // Get user from database
           const user = await global.User.findOne({ userID });
           const currency = await global.Currency.findOne({ userID });
-          
+
           if (!user) {
             return global.api.sendMessage(
               `❌ User with ID ${userID} not found in database`,
@@ -366,7 +366,7 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Get user info from Facebook
           const fbUserInfo = await new Promise((resolve, reject) => {
             api.getUserInfo(userID, (err, info) => {
@@ -374,21 +374,21 @@ module.exports = {
               resolve(info[userID]);
             });
           });
-          
+
           // Format user info
           let reply = `👤 User Information:\n`;
           reply += `- ID: ${userID}\n`;
           reply += `- Name: ${user.name}\n`;
           reply += `- Profile URL: https://facebook.com/${userID}\n`;
           reply += `- Status: ${user.isBanned ? '🚫 Banned' : '✅ Active'}\n`;
-          
+
           if (user.isBanned) {
             reply += `- Ban Reason: ${user.banReason || 'No reason provided'}\n`;
           }
-          
+
           reply += `- Created: ${user.dateCreated.toLocaleString()}\n`;
           reply += `- Last Active: ${user.lastActive.toLocaleString()}\n\n`;
-          
+
           if (currency) {
             reply += `💰 Currency Information:\n`;
             reply += `- Level: ${currency.level}\n`;
@@ -396,19 +396,19 @@ module.exports = {
             reply += `- Money: ${currency.money}\n`;
             reply += `- Bank: ${currency.bank}/${currency.bankCapacity}\n`;
           }
-          
+
           // Check permissions
           const isOwner = userID === global.config.ownerID;
           const isAdmin = global.config.adminIDs.includes(userID);
           const isSupporter = global.config.supportIDs.includes(userID);
-          
+
           reply += `\n🔒 Permissions:\n`;
           reply += `- Owner: ${isOwner ? '✅' : '❌'}\n`;
           reply += `- Admin: ${isAdmin ? '✅' : '❌'}\n`;
           reply += `- Supporter: ${isSupporter ? '✅' : '❌'}\n`;
-          
+
           return global.api.sendMessage(reply, threadID, messageID);
-          
+
         } catch (error) {
           global.logger.error('Error in admin info user command:', error.message);
           return global.api.sendMessage(
@@ -422,7 +422,7 @@ module.exports = {
         try {
           // Get thread from database
           const thread = await global.Thread.findOne({ threadID: targetID });
-          
+
           if (!thread) {
             return global.api.sendMessage(
               `❌ Thread with ID ${targetID} not found in database`,
@@ -430,7 +430,7 @@ module.exports = {
               messageID
             );
           }
-          
+
           // Get thread info from Facebook
           const fbThreadInfo = await new Promise((resolve, reject) => {
             api.getThreadInfo(targetID, (err, info) => {
@@ -438,22 +438,22 @@ module.exports = {
               resolve(info);
             });
           });
-          
+
           // Format thread info
           let reply = `👥 Thread Information:\n`;
           reply += `- ID: ${targetID}\n`;
           reply += `- Name: ${thread.threadName}\n`;
           reply += `- Type: ${fbThreadInfo.isGroup ? 'Group' : 'Personal Chat'}\n`;
           reply += `- Status: ${thread.isBanned ? '🚫 Banned' : '✅ Active'}\n`;
-          
+
           if (thread.isBanned) {
             reply += `- Ban Reason: ${thread.banReason || 'No reason provided'}\n`;
           }
-          
+
           reply += `- Created: ${thread.dateCreated.toLocaleString()}\n`;
           reply += `- Last Active: ${thread.lastActive.toLocaleString()}\n`;
           reply += `- Member Count: ${thread.users.length}\n\n`;
-          
+
           // Thread settings
           reply += `⚙️ Settings:\n`;
           reply += `- Anti-Join: ${thread.settings?.antiJoin ? '✅' : '❌'}\n`;
@@ -461,9 +461,9 @@ module.exports = {
           reply += `- Welcome: ${thread.settings?.welcome ? '✅' : '❌'}\n`;
           reply += `- Goodbye: ${thread.settings?.goodbye ? '✅' : '❌'}\n`;
           reply += `- NSFW: ${thread.settings?.nsfw ? '✅' : '❌'}\n`;
-          
+
           return global.api.sendMessage(reply, threadID, messageID);
-          
+
         } catch (error) {
           global.logger.error('Error in admin info thread command:', error.message);
           return global.api.sendMessage(
@@ -480,11 +480,11 @@ module.exports = {
         );
       }
     }
-    
+
     // Handle reload action
     else if (action === 'reload') {
       const commandName = args[1];
-      
+
       if (!commandName) {
         return global.api.sendMessage(
           '❌ Missing command name to reload',
@@ -492,10 +492,10 @@ module.exports = {
           messageID
         );
       }
-      
+
       try {
         const success = global.utils.loader.reloadCommand(commandName);
-        
+
         if (success) {
           return global.api.sendMessage(
             `✅ Successfully reloaded command: ${commandName}`,
@@ -518,7 +518,7 @@ module.exports = {
         );
       }
     }
-    
+
     // Handle restart action (owner only)
     else if (action === 'restart') {
       // Check if user is owner
@@ -529,15 +529,15 @@ module.exports = {
           messageID
         );
       }
-      
+
       await global.api.sendMessage(
         '🔄 Restarting bot...',
         threadID,
         messageID
       );
-      
+
       global.logger.system('Bot restart initiated by owner');
-      
+
       // Exit process - process manager should restart it
       setTimeout(() => process.exit(1), 2000);
     }
@@ -726,12 +726,25 @@ module.exports = {
         global.config.adminOnlyMode.global = false;
         global.config.adminOnlyMode.mode = 'public';
 
+        // Also reset current group's mode for convenience
+        await global.Thread.findOneAndUpdate(
+          { threadID },
+          {
+            $unset: { 'settings.adminOnlyMode': 1 },
+            $set: {
+              'settings.updatedAt': new Date(),
+              'settings.updatedBy': senderID
+            }
+          },
+          { new: true }
+        );
+
         // Save to config file
         const fs = require('fs');
         fs.writeFileSync('./config.json', JSON.stringify(global.config, null, 2));
 
         return global.api.sendMessage(
-          `🔓 Bot is now in PUBLIC mode globally.\nEveryone can use commands.`,
+          `🔓 Bot is now in PUBLIC mode globally & in this group.\nEveryone can use commands.`,
           threadID,
           messageID
         );

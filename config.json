@@ -58,6 +58,7 @@
     "maxReconnectAttempts": 5,
     "autoSaveAppstate": true
   },
+  "unsendReaction": "🖤",
   "apiKeys": {
     "priyanshuApi": ""
   },

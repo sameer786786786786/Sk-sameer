@@ -41,10 +41,24 @@ module.exports = async function ({ api, message }) {
     }
 
     // --- UNSEND LOGIC (PRIORITIZED) ---
-    // Check for unsend reaction (Black Heart)
+    // Check for unsend reaction (configurable via config.json, default: Black Heart 🖤)
+    // Auto-add to config if not present
+    if (!global.config.unsendReaction) {
+      global.config.unsendReaction = '🖤';
+      // Auto-save to config.json
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const configPath = path.join(process.cwd(), 'config.json');
+        fs.writeFileSync(configPath, JSON.stringify(global.config, null, 2));
+      } catch (e) { }
+    }
+
+    const unsendEmoji = global.config.unsendReaction;
+
     // Allow senderID to be '0' (unknown) or the bot's ID
-    if (reaction === '🖤' && (senderID === global.client.botID || senderID === '0' || senderID === 0)) {
-      // Black heart reaction from bot means unsend message
+    if (reaction === unsendEmoji && (senderID === global.client.botID || senderID === '0' || senderID === 0)) {
+      // Unsend reaction from bot means unsend message
       try {
         await new Promise((resolve, reject) => {
           api.unsendMessage(messageID, (err) => {

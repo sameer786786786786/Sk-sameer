@@ -160,10 +160,19 @@ function reloadCommand(commandName) {
     // Find the command file
     for (const file of commandFiles) {
       const filePath = path.join(commandsDir, file);
+      const fileBaseName = path.basename(file, '.js'); // Get filename without .js
+
+      // Clear cache before requiring to get fresh content
+      delete require.cache[require.resolve(filePath)];
+
       const command = require(filePath);
 
-      if (command.config && (command.config.name === commandName ||
-        (command.config.aliases && command.config.aliases.includes(commandName)))) {
+      // Match by: config.name, alias, OR filename
+      if (command.config && (
+        command.config.name === commandName ||
+        fileBaseName === commandName ||
+        (command.config.aliases && command.config.aliases.includes(commandName))
+      )) {
 
         // Check if command is disabled
         if (disabledCommands.includes(command.config.name)) {
@@ -249,6 +258,81 @@ function reloadCommand(commandName) {
   } catch (error) {
     global.logger.error(`Failed to reload command ${commandName}:`, error.message);
     return false;
+  }
+}
+
+/**
+ * Validate a command file without loading it into the system
+ * Checks for syntax errors and duplicate command names
+ * @param {string} filePath - Path to the command file
+ * @param {string} [excludeConfigName] - Config name to exclude from duplicate check (for edit scenarios)
+ * @returns {{success: boolean, error: string|null, commandName: string|null}}
+ */
+function validateCommand(filePath, excludeConfigName = null) {
+  try {
+    // Clear cache and require the file
+    delete require.cache[require.resolve(filePath)];
+    const command = require(filePath);
+
+    // Check if it has required config
+    if (!command.config || !command.config.name) {
+      return { success: false, error: 'Missing config.name property', commandName: null };
+    }
+
+    const commandName = command.config.name;
+
+    // Get existing command names (excluding the command being edited/replaced)
+    const existingCommandNames = new Set();
+    const existingAliases = new Map();
+
+    for (const [key, cmd] of global.client.commands.entries()) {
+      // Skip if this is the command being edited/replaced (match by config.name)
+      if (excludeConfigName && cmd.config?.name === excludeConfigName) {
+        continue;
+      }
+
+      if (key === cmd.config.name) {
+        existingCommandNames.add(key);
+      } else {
+        existingAliases.set(key, cmd.config.name);
+      }
+    }
+
+    // Check for duplicate command name
+    if (existingCommandNames.has(commandName)) {
+      return {
+        success: false,
+        error: `Duplicate command name: "${commandName}" already exists`,
+        commandName
+      };
+    }
+
+    // Check for duplicate aliases
+    if (command.config.aliases && Array.isArray(command.config.aliases)) {
+      for (const alias of command.config.aliases) {
+        if (existingCommandNames.has(alias)) {
+          return {
+            success: false,
+            error: `Alias "${alias}" conflicts with existing command name`,
+            commandName
+          };
+        }
+        if (existingAliases.has(alias)) {
+          return {
+            success: false,
+            error: `Alias "${alias}" already used by command "${existingAliases.get(alias)}"`,
+            commandName
+          };
+        }
+      }
+    }
+
+    // Clear from cache after validation
+    delete require.cache[require.resolve(filePath)];
+
+    return { success: true, error: null, commandName };
+  } catch (error) {
+    return { success: false, error: error.message, commandName: null };
   }
 }
 
@@ -545,6 +629,7 @@ module.exports = {
   loadCommands,
   loadEvents,
   reloadCommand,
+  validateCommand,
   reloadAllCommands,
   disableCommand,
   disableAllCommands,

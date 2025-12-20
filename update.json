@@ -1,8 +1,57 @@
 {
     "versions": [
         {
+            "version": "2.0.0",
+            "changelog": [
+                "",
+                "🚀 Admin Command Updates:",
+                "   • Fix reply after using admin only command",
+                "",
+                "🎯 Pastebin Apply Feature:",
+                "   • New /pastebin apply <filepath> action",
+                "   • Reply to message with pastebin link",
+                "   • Full validation before applying",
+                "   • Auto-reload after apply",
+                "",
+                "🎯 YouTube URL Detection Fix:",
+                "   • music command: Shorts, mobile, embed support",
+                "   • video command: Same fix applied",
+                "   • URL normalization to standard format",
+                "",
+                "🔧 Logs Timezone:",
+                "   • India Standard Time (IST) timezone",
+                "",
+                "🧹 Cleanup:",
+                "   • Removed delete and empty thread from database",
+                "",
+                "UnsendReaction🖤 add in config.json:",
+                "   • Add unsendReaction: '🖤' in config.json"
+            ],
+            "files": [
+                "modules/commands/code.js",
+                "modules/commands/admin.js",
+                "modules/commands/pastebin.js",
+                "modules/commands/music.js",
+                "modules/commands/video.js",
+                "modules/commands/cleanup.js",
+                "modules/commands/update.js",
+                "utils/loader.js",
+                "handles/handleCreateDatabase.js",
+                "handles/handleCommand.js",
+                "handles/handleReaction.js",
+                "main.js",
+                "update.json",
+                "CHANGELOG.md"
+            ]
+        },
+        {
             "version": "1.0.0",
-            "changelog": "Runtime update helper and stability fixes.",
+            "changelog": [
+                "🚀 Initial Release:",
+                "   • Runtime update helper",
+                "   • Stability fixes",
+                "   • Bot command updates"
+            ],
             "files": [
                 "modules/commands/update.js",
                 "modules/commands/bot.js",

@@ -161,7 +161,13 @@ module.exports.run = async ({ api, message, args }) => {
         versionsToApply.forEach(entry => (entry.files || []).forEach(file => filesToUpdate.add(file)));
         filesToUpdate.add('package.json');
 
-        const changelogLines = versionsToApply.map(entry => `• v${entry.version}: ${entry.changelog || "No changelog provided."}`);
+        const changelogLines = versionsToApply.map(entry => {
+            const changelog = entry.changelog;
+            if (Array.isArray(changelog)) {
+                return `📌 v${entry.version}:\n${changelog.join('\n')}`;
+            }
+            return `• v${entry.version}: ${changelog || "No changelog provided."}`;
+        });
         const updatePlan = {
             targetVersion: versionsToApply[versionsToApply.length - 1].version,
             files: Array.from(filesToUpdate),

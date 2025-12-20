@@ -47,8 +47,8 @@ module.exports.run = async function ({ api, message, args }) {
     let processingMsg = null;
 
     try {
-        // Check if input is a URL
-        const isUrl = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/.test(input);
+        // Check if input is a YouTube URL (supports shorts, mobile, youtu.be, etc.)
+        const isUrl = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)(\/|$)/.test(input);
 
         if (!isUrl) {
             processingMsg = await api.sendMessage(`🔍 Searching for: ${input}...`, threadID, messageID);
@@ -70,9 +70,12 @@ module.exports.run = async function ({ api, message, args }) {
             processingMsg = await api.sendMessage(`🔍 Processing URL...`, threadID, messageID);
             // Try to get details for URL
             try {
-                const videoIdMatch = input.match(/(?:v=|\/)([0-9A-Za-z_-]{11}).*/);
+                // Extract video ID from various YouTube URL formats
+                // Supports: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/shorts/ID, youtube.com/embed/ID, youtube.com/v/ID
+                const videoIdMatch = input.match(/(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/|v\/)|youtu\.be\/)([0-9A-Za-z_-]{11})/);
                 if (videoIdMatch) {
                     const videoId = videoIdMatch[1];
+                    videoUrl = `https://www.youtube.com/watch?v=${videoId}`; // Normalize URL for API
                     const searchResult = await ytSearch({ videoId: videoId });
                     if (searchResult) {
                         videoTitle = searchResult.title;
@@ -170,7 +173,7 @@ module.exports.run = async function ({ api, message, args }) {
         const downloadingMsg = await api.sendMessage(`⏳ Downloading ${finalTitle} (${successfulQuality}p)...`, threadID, messageID);
 
         // Download file
-        const tempDir = path.join(__dirname, "temporary");
+        const tempDir = path.join(__dirname, "temp");
         if (!fs.existsSync(tempDir)) {
             fs.mkdirSync(tempDir, { recursive: true });
         }
