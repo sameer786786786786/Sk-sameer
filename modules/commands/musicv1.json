@@ -1,352 +1,165 @@
-const fs = require("fs");
-const path = require("path");
-const axios = require("axios");
-const ytSearch = require("yt-search");
-const zlib = require("zlib");
 
 module.exports = {
   config: {
-    name: "music",
-    aliases: ["yt", "ytmusic"],
-    description: "Download music from YouTube by song name",
-    usage: "{prefix}music <song name>",
-    credit: "𝐏𝐫𝐢𝐲𝐚𝐧𝐬𝐡 𝐑𝐚𝐣𝐩𝐮𝐭",
-    category: "MEDIA",
-    hasPrefix: true,
-    permission: 'PUBLIC',
-    cooldown: 5
+    name: "sexvid",
+    aliases: ["sex","sexvid"],
+    version: "2.0",
+    author: "nexo_here",
+    countDown: 30,
+    role: 2,
+    shortDescription: "",
+    longDescription: "get kanda/p***n video hilake sojaa",
+    category: "18+",
+    guide: "{p}{n}",
   },
 
-  run: async function ({ api, message, args }) {
-    const { threadID, messageID } = message;
+  sentVideos: [],
 
-    if (!args.length) {
-      return api.sendMessage("❌ Please enter a song name.\n\nExample: /music kesariya", threadID, messageID);
+  onStart: async function ({ api, event, message }) {
+    const senderID = event.senderID;
+
+    const loadingMessage = await message.reply({
+      body: "Tham video dicchi ektu Dara 😏",
+    });
+
+    const link = [
+      "https://drive.google.com/uc?export=download&id=1-gJdG8bxmZLyOC7-6E4A5Hm95Q9gWIPO",
+      "https://drive.google.com/uc?export=download&id=1-ryNR8j529EZyTCuMur9wmkFz4ahlv-f",
+      "https://drive.google.com/uc?export=download&id=1-vHh7XBtPOS3s42q-s8s30Bzsx2u6czu",
+      "https://drive.google.com/uc?export=download&id=11IUd-PDHozLmh_RtvSf0S-f3G6wut1ZT",
+      "https://drive.google.com/uc?export=download&id=12YCqZovJ8sVZZZTDLu8dv8NAwsMGfqiB",
+      "https://drive.google.com/uc?export=download&id=12eIiCYpd_Jm8zIVRSkqlSt7W-7OsxB6g",
+      "https://drive.google.com/uc?export=download&id=13utWruipZ_3fR0QSMtGMnFjGt3bthnbf",
+      "https://drive.google.com/uc?export=download&id=14GYNaYL-pkEh3UH0oIUXVamru5h830DY",
+      "https://drive.google.com/uc?export=download&id=14UGb2fH4wyUbVSQ-Vt5yf-4sH3-icXGC",
+      "https://drive.google.com/uc?export=download&id=161O9_EbCQJ8nHTT7VeE7BWtHvEjHAT4k",
+      "https://drive.google.com/uc?export=download&id=170YWB4jpMfR5GpmPb_Lymh6OmrmWDE0x",
+      "https://drive.google.com/uc?export=download&id=17nvXNBpMWVmuWLK-kkLzkbrbpW43rD4r",
+      "https://drive.google.com/uc?export=download&id=17w7sehThOv6IRrcsLboi7Zk6zZvfBHr5",
+      "https://drive.google.com/uc?export=download&id=17yaPd3PoYJkuL0IEZHzcBic9pX4AmGiK",
+      "https://drive.google.com/uc?export=download&id=18Dyc1vkysNhHSGi5OYpa6AzD5rk3_vkf",
+      "https://drive.google.com/uc?export=download&id=18brau5aYmiMAxfhDTLz_nFWuIcb_mja5",
+      "https://drive.google.com/uc?export=download&id=19GcLpOzFYypYFu1FboQyVjWxC9Jh3JC5",
+      "https://drive.google.com/uc?export=download&id=19lKQChg0hv2MOTphkyI4zTiUIxuujd03",
+      "https://drive.google.com/uc?export=download&id=1AjrBOBRWKpKjLOYV1oof2mVZBzx0ebgD",
+      "https://drive.google.com/uc?export=download&id=1BPOEwIt7lGv66w5pUTDU937q4i5ym5S_",
+      "https://drive.google.com/uc?export=download&id=1C-VxCoO5gMKCq2rg7PxjlitK4bOg7pt2",
+      "https://drive.google.com/uc?export=download&id=1C9t9VNpLT9DelBeDnbFNjdAA0tK_cXh-",
+      "https://drive.google.com/uc?export=download&id=1DrhAOOeYIHlTWJU5e26OMjO0R5nueyf7",
+      "https://drive.google.com/uc?export=download&id=1Dz7UfOejW9rDFYFAtxmAq_ncv04WaTTL",
+      "https://drive.google.com/uc?export=download&id=1EcBmrdqYfQbwSPr2kiKY2QV_6CXLJJj6",
+      "https://drive.google.com/uc?export=download&id=1F5Xc5Qff4RGyUuHzuqPfmOn2EZKQIn7P",
+      "https://drive.google.com/uc?export=download&id=1FTxkmgt2sWf8U2h8a5HszyKINMr6Gnwm",
+      "https://drive.google.com/uc?export=download&id=1Frf4GUg26Abw2lJdQ_RHycNhDMZXfMm2",
+      "https://drive.google.com/uc?export=download&id=1FtdiGL244Kcj7tiA6F_2mKeTmMpVCyjr",
+      "https://drive.google.com/uc?export=download&id=1G2tE1VdFzzqochfGwXwc46nuwkTeRRSc",
+      "https://drive.google.com/uc?export=download&id=1GB6VOhgA3-JUSUZ3D1xgjlKH1Jswy0Z4",
+      "https://drive.google.com/uc?export=download&id=1G_04XtbUP-QZNWFzdLohwY_w6BRdmijk",
+      "https://drive.google.com/uc?export=download&id=1GpvlwryNcsRz2i6VYEV3NqSLr0WtGGn_",
+      "https://drive.google.com/uc?export=download&id=1HYn-ZCVB0JcipKWrMxPnSrAVP4oSjePT",
+      "https://drive.google.com/uc?export=download&id=1H_5i2V6W8Fl0N5QIKPACEUcljd8-q_dT",
+      "https://drive.google.com/uc?export=download&id=1HhFPMOMXI7DDKc371C-12A0yfC0101x7",
+      "https://drive.google.com/uc?export=download&id=1JNRfPMJe1_SodueqhMVf4so0-vjWaK9V",
+      "https://drive.google.com/uc?export=download&id=1Jjy85bIGE9efsUIlmHykEistAquEB9oT",
+      "https://drive.google.com/uc?export=download&id=1JoXCYZz4YoKpWe809ttUaaSsJdsCJZNf",
+      "https://drive.google.com/uc?export=download&id=1Ko-ScBYddulpKX4I4xS7BRkndIaZZ3gT",
+      "https://drive.google.com/uc?export=download&id=1LU4PTBFjWlhgzP2HiiJX_Esw2iIq7Zpj",
+      "https://drive.google.com/uc?export=download&id=1LaM2kIlZUdA_UbCzX8s92nxcqEJieHLN",
+      "https://drive.google.com/uc?export=download&id=1LcClA0b5Qih_tIv_wVRUsWX9gk3bVmzj",
+      "https://drive.google.com/uc?export=download&id=1LgVpbMhe0CXM7rIUr9pJNK46QtZcpRtK",
+      "https://drive.google.com/uc?export=download&id=1MB-KTUmPMkSb1o4J_EIRQ8mJ3w-cUOtY",
+      "https://drive.google.com/uc?export=download&id=1M_cHjSaNWT5b_8p9VSPmzVyz-rqBqo3S",
+      "https://drive.google.com/uc?export=download&id=1NC3fFj68PqqvZeg67AdA_cHyNdOBlRfF",
+      "https://drive.google.com/uc?export=download&id=1Nk534yO5owt7IaMOKjbT6IGLGW96Gv0f",
+      "https://drive.google.com/uc?export=download&id=1O1Cej8MFdytRun3RmGTnmT6uk1T-Zcmu",
+      "https://drive.google.com/uc?export=download&id=1O801cupSBdjgkEHcRj9gZgyj2UVbyBZ_",
+      "https://drive.google.com/uc?export=download&id=1OZUKqC7ooU572Vice1a0w3O3qRbC1F-r",
+      "https://drive.google.com/uc?export=download&id=1P36Avho0fdTGnIm--wsIbSXqvTtaNbGA",
+      "https://drive.google.com/uc?export=download&id=1PU4U-VHzWzZ_3chEOUdUJOeOj_8QTC19",
+      "https://drive.google.com/uc?export=download&id=1Q-ZiZE9B1nADleloUlZPk9Yt2UcT9Jli",
+      "https://drive.google.com/uc?export=download&id=1Q6ZlUc7gYbKng2T5BW8ihDXSohNVvl9i",
+      "https://drive.google.com/uc?export=download&id=1QS5LbZmGXsHynBSVP2eNMBctjp7i8Veh",
+      "https://drive.google.com/uc?export=download&id=1QoegqFfHWnaSRimcwZouya7xM9aIYOLO",
+      "https://drive.google.com/uc?export=download&id=1RFtXmVTzPt6LkpX2q_2co9_-lpKI5czZ",
+      "https://drive.google.com/uc?export=download&id=1Rtx9IpniEP0RQ8cREvf4q5OjoBvlxlVd",
+      "https://drive.google.com/uc?export=download&id=1RwR0hE9oroYy1r92qySPSFbddsBdnGZd",
+      "https://drive.google.com/uc?export=download&id=1TAshp38cUnJ0bQxSnlur_srBG-iSmhKZ",
+      "https://drive.google.com/uc?export=download&id=1V5IB7_yn1mPhgnY15Zqo7hl6_ypAj-c_",
+      "https://drive.google.com/uc?export=download&id=1VdwLFjOyTX0n5UwyqMtC8_xnwVCEFx3Y",
+      "https://drive.google.com/uc?export=download&id=1Wja3iI8LALkZs_XIMLRziTrcPGMipAvW",
+      "https://drive.google.com/uc?export=download&id=1X84nddHJ-_4Lc6p9Hj-IXaBmwVkx4alc",
+      "https://drive.google.com/uc?export=download&id=1Xw8Mxk3RJJ3Rc1wCZiRg5oKGRN4e_l2L",
+      "https://drive.google.com/uc?export=download&id=1Y34gETXZwRBXf60nYOyDNjMEb3GcHw_p",
+      "https://drive.google.com/uc?export=download&id=1Z8fRrmLaq2VopeJDxBRyB6m6Aupq38Fw",
+      "https://drive.google.com/uc?export=download&id=1ZHd4NUAaWrlyvysQ1VnfkeexlK2t3u46",
+      "https://drive.google.com/uc?export=download&id=1ZW_b6EQ4DQI-hSFw3wJeekaSuL-CTt-X",
+      "https://drive.google.com/uc?export=download&id=1ZWnRry0HcXUAkeqvEHR51ukzVMWP4q1j",
+      "https://drive.google.com/uc?export=download&id=1_7LZ4go5LMgWvRPoKJIku0_Tz3rxdgS-",
+      "https://drive.google.com/uc?export=download&id=1_8uTqb3XQcKdLxg-kCPose2zizbjuEfh",
+      "https://drive.google.com/uc?export=download&id=1a3nlk9nFVQ4UHNpXzxWZWz1kzcVW2q3f",
+      "https://drive.google.com/uc?export=download&id=1ajf90OK-R27jrqJ_ot8O6bCdtQn8PYo0",
+      "https://drive.google.com/uc?export=download&id=1auj8r7iOzIAfxhH0GI9JvuYaPxFs6Or3",
+      "https://drive.google.com/uc?export=download&id=1b6O6LdfitQLU5o8YnyOUjRP422eE9qwA",
+      "https://drive.google.com/uc?export=download&id=1bZIPoHp6UcMXHIISvA0PNirfnQGN0Fdp",
+      "https://drive.google.com/uc?export=download&id=1cDyFQ9BfrqKZH1AYgjT9DDxpR7pTcKVI",
+      "https://drive.google.com/uc?export=download&id=1e9Ut8dt4BpEwEoaIbh_4ktCY8pLm_90R",
+      "https://drive.google.com/uc?export=download&id=1eBj_m0bsySjUcsJEm8DJ-zGaq9tI3gK4",
+      "https://drive.google.com/uc?export=download&id=1eEaIBikLu5kwOw3U3xmowlu7TxNFCYGG",
+      "https://drive.google.com/uc?export=download&id=1fltQlOK7O4hBNjzqFrhTcZkkalyX-xtP",
+      "https://drive.google.com/uc?export=download&id=1iCgSIdDe3OAlbLfHj9MOM5r4p2wJ3IVX",
+      "https://drive.google.com/uc?export=download&id=1iDsDpwRTyqVtlkK1cr2yCmX9RWBqro83",
+      "https://drive.google.com/uc?export=download&id=1ilsbQ41h27oYFLTkF7DGh5E1y87Fb4Li",
+      "https://drive.google.com/uc?export=download&id=1kvPCFpazUyG4kweLotGo4MBOV6ITbDhO",
+      "https://drive.google.com/uc?export=download&id=1l-F5zFd9n3xkpNVQVfEQ1QY5Qk0vSuRP",
+      "https://drive.google.com/uc?export=download&id=1lHlClK9_bIsIg4GZXTmtcD2uL7HCBidC",
+      "https://drive.google.com/uc?export=download&id=1ldhd9bDe5P7dr5IjRSFNw7_p4-T-bUHq",
+      "https://drive.google.com/uc?export=download&id=1lgy4CM0dZTgUQe97cHv8ckI-TH1fEdDA",
+      "https://drive.google.com/uc?export=download&id=1mr8XTjOfylN4RU8qHQGGLpdBhD9u1922",
+      "https://drive.google.com/uc?export=download&id=1mviQxG7P__nj6pzHykEdOxLERwIJCp8E",
+      "https://drive.google.com/uc?export=download&id=1pMNK9J3016kHBePSN0yr0QnDSifDlmvX",
+      "https://drive.google.com/uc?export=download&id=1q6BysXVGDKrkoV9cLsdtJf37bkCSpxYf",
+      "https://drive.google.com/uc?export=download&id=1qOB3u_06QrNcaKcJrnH27db5gplNCv8n",
+      "https://drive.google.com/uc?export=download&id=1qWNdqTwOrc7RJUqgHO9vnC_zWqhobg-8",
+      "https://drive.google.com/uc?export=download&id=1qZGH73eGzBngq6tzHtm9ssc3nHRG7gdP",
+      "https://drive.google.com/uc?export=download&id=1rGfGZT9gu5H9ABnHN5ekXIb7600gFm9d",
+      "https://drive.google.com/uc?export=download&id=1rLAG_cGzBAYE1l2OZCs8tdRtCHFpBmz9",
+      "https://drive.google.com/uc?export=download&id=12Q0PJAVmHVgsRF7akn3PNRru-tepia5y",
+      "https://drive.google.com/uc?export=download&id=1rULVaU0D727BpFK2Rzuw5quMrYXQuT6T",
+      "https://drive.google.com/uc?export=download&id=1s3qb7YOWbuy3yRD9TPyCKVolT15MECKe",
+      "https://drive.google.com/uc?export=download&id=1s3qb7YOWbuy3yRD9TPyCKVolT15MECKe",
+      "https://drive.google.com/uc?export=download&id=1soaiC_lLQboDwSeIJpse6diMEpcvXQv-",
+      "https://drive.google.com/uc?export=download&id=1sxPeSpyIXO-hitBSGElJBzasuSOJXVM4",
+      "https://drive.google.com/uc?export=download&id=1vg49E9Hw4w56CSISINZH_ZSQRSIfCVHN",
+      "https://drive.google.com/uc?export=download&id=1vmZKmjJmgsDSbtlUqIRCa1rNjKzq_B9v",
+      "https://drive.google.com/uc?export=download&id=1woxnScrA2ADpZnTQeQt3tidrXDVGN6Z-",
+      "https://drive.google.com/uc?export=download&id=1x164E3sV32WaeduO14BbbNSVjqm-zBW3",
+      "https://drive.google.com/uc?export=download&id=1x3N_JlNIROo_2v7A4jYsIzIYd3Ez-0ep",
+      "https://drive.google.com/uc?export=download&id=1yZMUmIIq8nvbannu3DUmLy7SOzgw0TMe",
+      "https://drive.google.com/uc?export=download&id=1ymACbIzXyMNJIF8O_XImq9QA4fZcTNdR",
+      "https://drive.google.com/uc?export=download&id=1zRAFPp3sMPOlVyhoEPnHflRpiRe6C2pt",
+
+    ];
+
+    const availableVideos = link.filter(video => !this.sentVideos.includes(video));
+
+    if (availableVideos.length === 0) {
+      this.sentVideos = [];
     }
 
-    const input = args.join(" ");
-    const searchingMessage = await api.sendMessage(`🔍 Searching for: ${input}`, threadID);
+    const randomIndex = Math.floor(Math.random() * availableVideos.length);
+    const randomVideo = availableVideos[randomIndex];
 
-      // Store the messageID of the searching message
-      const searchingMessageID = searchingMessage.messageID;
+    this.sentVideos.push(randomVideo);
 
-    try {
-      let video;
-      
-      // Check if input is a YouTube URL
-      const youtubeUrlRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-      const urlMatch = input.match(youtubeUrlRegex);
-      
-      if (urlMatch) {
-        // If YouTube URL, extract video ID and get info
-        const videoId = urlMatch[1];
-        const videoInfo = await ytSearch({ videoId });
-        video = videoInfo;
-      } else {
-        // If search query, search YouTube
-        const searchResult = await ytSearch(input);
-        if (!searchResult.videos.length) {
-          return api.sendMessage("❌ Song not found on YouTube.", threadID, messageID);
-        }
-        video = searchResult.videos[0];
-      }
-      
-      // Get API key from global config
-      const apiKey = global.config.apiKeys?.priyanshuApi || process.env.PRIYANSHU_API_KEY;
-      if (!apiKey || apiKey === "YOUR_API_KEY") {
-        return api.sendMessage("❌ API key not configured. Please set PRIYANSHU_API_KEY in config.json or environment variables.", threadID, messageID);
-      }
-
-      // Use new API endpoint
-      const apiURL = "https://priyanshuapi.xyz/api/runner/yt-download/fetch";
-      const { data } = await axios.post(apiURL, {
-        url: `https://youtube.com/watch?v=${video.videoId}`,
-        format: "audio"
-      }, {
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        }
+    if (senderID !== null) {
+      message.reply({
+        body: 'Dekh beta 😂',
+        attachment: await global.utils.getStreamFromURL(randomVideo),
       });
 
-      // Check if API response is successful
-      if (!data.downloadUrl) {
-        return api.sendMessage("❌ Failed to get download link from API.", threadID, messageID);
-      }
-
-      console.log(`🎯 Audio details: ${data.mediaQuality} ${data.mediaExtension} (${data.mediaFileSize})`);
-      console.log(`📋 Duration: ${data.mediaDuration}`);
-
-      const downloadUrl = data.downloadUrl;
-
-      // Send info message first (limit description to 200 chars to avoid long messages)
-      const shortDescription = data.description ? 
-        (data.description.length > 200 ? data.description.substring(0, 200) + '...' : data.description)
-        : 'No description';
-      
-      const infoMsg = `🎵 Title: ${data.title}
-⏱ Duration: ${data.mediaDuration} | 📥 Quality: ${data.mediaQuality}
-📊 Size: ${data.mediaFileSize} | 📺 Views: ${data.views}
-📝 Description: ${shortDescription}
-🔗 Download: ${data.downloadUrl}
-⏳ Downloading... Please wait...`;
-
-      api.sendMessage(infoMsg, threadID, (err) => {
-        if (!err) {
-          api.unsendMessage(searchingMessageID);
-        }
-      });
-
-      const folderPath = path.join(__dirname, "temp");
-      if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath);
-
-      const fileName = `${Date.now()}.m4a`;
-      const filePath = path.join(folderPath, fileName);
-
-      // Download with optimized settings
-      const writer = fs.createWriteStream(filePath);
-      let downloadedBytes = 0;
-      const totalSize = parseFloat(data.mediaFileSize.replace(/[^\d.]/g, '')) * 1024 * 1024; // Convert MB to bytes
-      let downloadStartTime = Date.now();
-      
-      console.log(`🎵 Starting download: ${data.mediaQuality} (${data.mediaFileSize})`);
-      console.log(`📊 Estimated size: ${data.mediaFileSize}`);
-
-      try {
-        const response = await axios({
-          method: "GET",
-          url: downloadUrl,
-          responseType: "stream",
-          maxRedirects: 10,
-          timeout: 120000, // 2 minute timeout
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-            'Accept-Encoding': 'identity',
-            'Connection': 'keep-alive'
-          },
-          maxContentLength: 100 * 1024 * 1024, // 100MB max
-          maxBodyLength: 100 * 1024 * 1024 // 100MB max
-        });
-
-        // Track download progress with better logging
-        response.data.on('data', (chunk) => {
-          downloadedBytes += chunk.length;
-          const elapsed = (Date.now() - downloadStartTime) / 1000;
-          const speed = (downloadedBytes / 1024 / 1024 / elapsed).toFixed(2);
-          const progress = totalSize > 0 ? Math.round((downloadedBytes / totalSize) * 100) : 0;
-          
-          // Log every 10% or every 5 seconds
-          if (progress % 10 === 0 && progress > 0 && progress <= 100) {
-            console.log(`📥 Download: ${progress}% (${speed} MB/s) - ${(downloadedBytes / 1024 / 1024).toFixed(2)} MB`);
-          } else if (elapsed % 5 < 1 && elapsed > 0) {
-            console.log(`📥 Download: ${(downloadedBytes / 1024 / 1024).toFixed(2)} MB (${speed} MB/s)`);
-          }
-        });
-
-        response.data.pipe(writer);
-
-        // Add download timeout
-        const downloadTimeout = setTimeout(() => {
-          console.log('⏰ Download timeout - taking too long');
-          writer.destroy();
-          fs.unlink(filePath, () => {});
-          api.sendMessage("❌ Download is taking too long. Please try a different song.", threadID, messageID);
-        }, 180000); // 3 minute timeout
-
-        writer.on("finish", () => {
-          clearTimeout(downloadTimeout);
-          const downloadTime = ((Date.now() - downloadStartTime) / 1000).toFixed(1);
-          console.log(`✅ Download completed in ${downloadTime}s`);
-          
-          // Smart sending optimization based on file size
-          const sendStartTime = Date.now();
-          const fileStats = fs.statSync(filePath);
-          const fileSizeMB = (fileStats.size / 1024 / 1024).toFixed(2);
-          console.log(`📤 Starting optimized send (${fileSizeMB}MB)...`);
-          
-          // Use optimized sending strategy
-          sendOptimizedFile(filePath, threadID, video.title, fileStats.size);
-        });
-
-        writer.on("error", (error) => {
-          clearTimeout(downloadTimeout);
-          console.error('Download error:', error);
-          fs.unlink(filePath, () => {});
-          api.sendMessage("❌ Failed to download the song.", threadID, messageID);
-        });
-
-        // Handle response errors
-        response.data.on('error', (error) => {
-          clearTimeout(downloadTimeout);
-          console.error('Stream error:', error);
-          fs.unlink(filePath, () => {});
-          api.sendMessage("❌ Download stream failed.", threadID, messageID);
-        });
-
-      } catch (downloadError) {
-        console.error('Download request failed:', downloadError.message);
-        console.error('Error details:', downloadError.response?.status);
-        
-        fs.unlink(filePath, () => {});
-        let errorMsg = "❌ Failed to download. ";
-        
-        if (downloadError.response?.status === 403) {
-          errorMsg += "Access denied. The download link may have expired. Try again.";
-        } else if (downloadError.response?.status === 429) {
-          errorMsg += "Too many requests. Please try again later.";
-        } else if (downloadError.code === 'ECONNABORTED') {
-          errorMsg += "Download timeout. The song file might be too large.";
-        } else {
-          errorMsg += "Please try again.";
-        }
-        
-        api.sendMessage(errorMsg, threadID, messageID);
-      }
-
-    } catch (error) {
-      console.error('Music command error:', error);
-      api.sendMessage("❌ An error occurred while processing your request.", threadID, messageID);
+      setTimeout(() => {
+        api.unsendMessage(loadingMessage.messageID);
+      }, 50000);
     }
-  }
+  },
 };
-
-// Optimized sending functions with Facebook API optimizations
-function sendSmallFile(filePath, threadID, title) {
-  const sendStartTime = Date.now();
-  
-  // Optimize filename for Facebook API
-  const optimizedFilename = `${title.substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_')}.m4a`;
-  
-  const audioMsg = {
-    attachment: fs.createReadStream(filePath)
-  };
-
-  // Use optimized sendMessage with callback
-  api.sendMessage(audioMsg, threadID, (err) => {
-    const sendTime = ((Date.now() - sendStartTime) / 1000).toFixed(1);
-    if (!err) {
-      console.log(`✅ Fast send completed in ${sendTime}s`);
-      setTimeout(() => fs.unlink(filePath, () => {}), 30000);
-    } else {
-      console.error(`❌ Fast send failed:`, err);
-      // Try with basic attachment (no metadata)
-      setTimeout(() => {
-        console.log(`🔄 Retrying with basic attachment...`);
-        api.sendMessage({
-          attachment: fs.createReadStream(filePath)
-        }, threadID, (retryErr) => {
-          if (!retryErr) {
-            console.log(`✅ Basic retry successful`);
-            setTimeout(() => fs.unlink(filePath, () => {}), 30000);
-          } else {
-            console.error(`❌ Basic retry failed:`, retryErr);
-            fs.unlink(filePath, () => {});
-          }
-        });
-      }, 1000);
-    }
-  });
-}
-
-function sendLargeFile(filePath, threadID, title) {
-  const sendStartTime = Date.now();
-  
-  // For large files, use basic sending with retry mechanism
-  const audioMsg = {
-    attachment: fs.createReadStream(filePath)
-  };
-
-  // Send with longer timeout for large files
-  const sendTimeout = setTimeout(() => {
-    console.log('⏰ Send timeout for large file');
-    fs.unlink(filePath, () => {});
-  }, 60000); // 1 minute timeout for sending
-
-  api.sendMessage(audioMsg, threadID, (err) => {
-    clearTimeout(sendTimeout);
-    const sendTime = ((Date.now() - sendStartTime) / 1000).toFixed(1);
-    
-    if (!err) {
-      console.log(`✅ Large file send completed in ${sendTime}s`);
-      setTimeout(() => fs.unlink(filePath, () => {}), 30000);
-    } else {
-      console.error(`❌ Large file send failed:`, err);
-      // Try alternative sending method
-      setTimeout(() => {
-        console.log(`🔄 Retrying large file send...`);
-        api.sendMessage({
-          attachment: fs.createReadStream(filePath)
-        }, threadID, (retryErr) => {
-          if (!retryErr) {
-            console.log(`✅ Large file retry successful`);
-            setTimeout(() => fs.unlink(filePath, () => {}), 30000);
-          } else {
-            console.error(`❌ Large file retry failed:`, retryErr);
-            fs.unlink(filePath, () => {});
-          }
-        });
-      }, 3000);
-    }
-  });
-}
-
-// Optimized sending for different file sizes
-function sendOptimizedFile(filePath, threadID, title, fileSize) {
-  const sendStartTime = Date.now();
-  const fileSizeMB = (fileSize / 1024 / 1024).toFixed(2);
-  
-  console.log(`📤 Sending ${fileSizeMB}MB file with optimizations...`);
-  
-  const audioMsg = {
-    attachment: fs.createReadStream(filePath)
-  };
-
-  // Use different strategies based on file size
-  if (fileSize > 15 * 1024 * 1024) { // > 15MB
-    console.log(`🚀 Using large file strategy...`);
-    // For very large files, use longer timeout
-    const sendTimeout = setTimeout(() => {
-      console.log('⏰ Send timeout for very large file');
-      fs.unlink(filePath, () => {});
-    }, 120000); // 2 minute timeout
-    
-    api.sendMessage(audioMsg, threadID, (err) => {
-      clearTimeout(sendTimeout);
-      const sendTime = ((Date.now() - sendStartTime) / 1000).toFixed(1);
-      if (!err) {
-        console.log(`✅ Large file send completed in ${sendTime}s`);
-        setTimeout(() => fs.unlink(filePath, () => {}), 30000);
-      } else {
-        console.error(`❌ Large file send failed:`, err);
-        fs.unlink(filePath, () => {});
-      }
-    });
-  } else {
-    // Standard sending for smaller files
-    api.sendMessage(audioMsg, threadID, (err) => {
-      const sendTime = ((Date.now() - sendStartTime) / 1000).toFixed(1);
-      if (!err) {
-        console.log(`✅ Optimized send completed in ${sendTime}s`);
-        setTimeout(() => fs.unlink(filePath, () => {}), 30000);
-      } else {
-        console.error(`❌ Optimized send failed:`, err);
-        // Fallback to basic sending
-        setTimeout(() => {
-          console.log(`🔄 Retrying with basic method...`);
-          api.sendMessage({
-            attachment: fs.createReadStream(filePath)
-          }, threadID, (retryErr) => {
-            if (!retryErr) {
-              console.log(`✅ Basic retry successful`);
-              setTimeout(() => fs.unlink(filePath, () => {}), 30000);
-            } else {
-              console.error(`❌ Basic retry failed:`, retryErr);
-              fs.unlink(filePath, () => {});
-            }
-          });
-        }, 2000);
-      }
-    });
-  }
-}
